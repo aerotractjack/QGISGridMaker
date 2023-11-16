@@ -1,0 +1,35 @@
+name: Deploy QGISGridMaker service to Sandra and WSJA
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up SSH keys
+        run: |
+          mkdir ~/.ssh
+          chmod 700 ~/.ssh
+          echo "${{ secrets.WS006_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          echo "${{ secrets.WS006_PUBLIC_KEY }}" > ~/.ssh/id_rsa.pub
+          chmod 600 ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa.pub
+          ssh-keyscan -p 2593 -H 67.210.192.18 >> ~/.ssh/known_hosts
+          ssh-keyscan -p 1953 -H 67.210.192.18 >> ~/.ssh/known_hosts
+
+      # For the StorageManager, we need to make sure the API is running on Sandra and the PQ service is running on all hosts
+
+      - name: Deploy to Sandra
+        run: |
+          ssh -o PasswordAuthentication=no -p 1953 aerotract@67.210.192.18 "cd /home/aerotract/software/QGISGridMaker; git pull"
+          ssh -o PasswordAuthentication=no -p 1953 aerotract@67.210.192.18 "cd /home/aerotract/software/QGISGridMaker; ../internal-tools/restart-service.sh QGISGridMaker.service"
+
+      - name: Deploy to Jack WS
+        run: |
+          ssh -o PasswordAuthentication=no -p 2593 aerotract@67.210.192.18 "cd /home/aerotract/software/QGISGridMaker; git pull"

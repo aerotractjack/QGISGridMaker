@@ -1,0 +1,12 @@
+[Unit]
+Description=Run QGISGridMaker API
+After=network.target
+
+[Service]
+WorkingDirectory=/home/aerotract/software/QGISGridMaker
+User=aerotract
+Restart=on-failure
+ExecStart=/usr/bin/python3 /home/aerotract/software/QGISGridMaker/api.py
+
+[Install]
+WantedBy=multi-user.target
