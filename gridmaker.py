@@ -40,8 +40,8 @@ class GridMaker:
         self.create_raw_grid(extent_str)
         self.clip_raw_grid()
         self.buffer_clipped_grid()
-        os.remove(self.plot_paths['raw_tpa_plots'])
-        os.remove(self.plot_paths['clipped_tpa_plots'])
+        # os.remove(self.plot_paths['raw_tpa_plots'])
+        # os.remove(self.plot_paths['clipped_tpa_plots'])
 
     def load_shp(self):
         shp_vlayer = QgsVectorLayer(self.shp_path, "shp", "ogr")
@@ -112,6 +112,6 @@ if __name__ == "__main__":
         """
         log(msg)
         GridMaker.FromIDs(args.client, args.project, stand)
-        
+
     qgs.exitQgis()
 
