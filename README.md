@@ -1,1 +1,1 @@
-# `qgis.core` Plot Grid Generator + API/service
+# `qgis.core` Plot TPA Grid Generator + API/service
