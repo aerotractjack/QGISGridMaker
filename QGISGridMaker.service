@@ -6,6 +6,7 @@ After=network.target
 WorkingDirectory=/home/aerotract/software/QGISGridMaker
 User=aerotract
 Restart=on-failure
+Environment="QT_QPA_PLATFORM=offscreen"
 ExecStart=/usr/bin/python3 /home/aerotract/software/QGISGridMaker/api.py
 
 [Install]
