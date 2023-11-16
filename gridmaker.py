@@ -112,5 +112,6 @@ if __name__ == "__main__":
         """
         log(msg)
         GridMaker.FromIDs(args.client, args.project, stand)
+        
     qgs.exitQgis()
 
