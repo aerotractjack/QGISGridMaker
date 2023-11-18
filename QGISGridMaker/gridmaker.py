@@ -38,6 +38,9 @@ class GridMaker:
         self.create_raw_grid(extent_str)
         self.clip_raw_grid()
         self.buffer_clipped_grid()
+        qgs.exitQgis()
+        os.remove(self.plot_paths['raw_tpa_plots'])
+        os.remove(self.plot_paths['clipped_tpa_plots'])
         return self.plot_paths
 
     def load_shp(self):
@@ -54,7 +57,6 @@ class GridMaker:
         return extent_str
 
     def create_raw_grid(self, extent_str):
-        # Define parameters for creating grid
         params = {
             'TYPE': 0, 
             'EXTENT': extent_str,  
@@ -97,21 +99,4 @@ class GridMaker:
 
 def FromIDs(client_id, project_id, stand_id):
     return GridMaker.FromIDs(client_id, project_id, stand_id)
-
-if __name__ == "__main__":
-    import argparse
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--client", "-c", required=True, help="Client ID")
-    parser.add_argument("--project", "-p", required=True, help="Project ID")
-    parser.add_argument("--stand", "-s", required=True, help="Stand 3-Digit ID", nargs="+")
-    args = parser.parse_args()
-
-    for stand in args.stand:
-        msg = f"""
-        Starting {args.client}, {args.project}, {stand} 
-        """
-        log(msg)
-        GridMaker.FromIDs(args.client, args.project, stand)
-
-    qgs.exitQgis()
 
