@@ -41,7 +41,7 @@ class GridMaker:
         qgs.exitQgis()
         os.remove(self.plot_paths['raw_tpa_plots'])
         os.remove(self.plot_paths['clipped_tpa_plots'])
-        return self.plot_paths
+        return self.plot_paths['buffered_tpa_plots']
 
     def load_shp(self):
         shp_vlayer = QgsVectorLayer(self.shp_path, "shp", "ogr")
