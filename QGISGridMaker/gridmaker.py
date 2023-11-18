@@ -1,6 +1,4 @@
-import integration
 import os
-
 from qgis.core import (
     QgsApplication,
     QgsProject,
@@ -9,15 +7,15 @@ from qgis.core import (
     QgsCoordinateReferenceSystem
 )
 from qgis.analysis import QgsNativeAlgorithms
-
-QgsApplication.setPrefixPath("/usr/bin/qgis", True)
-qgs = QgsApplication([], False)
-qgs.initQgis()
-
 import sys
 sys.path.append("/usr/share/qgis/python/plugins")
 import processing
 from processing.core.Processing import Processing
+from . import integration
+
+QgsApplication.setPrefixPath("/usr/bin/qgis", True)
+qgs = QgsApplication([], False)
+qgs.initQgis()
 Processing.initialize()
 qgs.processingRegistry().addProvider(QgsNativeAlgorithms())
 
