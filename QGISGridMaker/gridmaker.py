@@ -40,8 +40,7 @@ class GridMaker:
         self.create_raw_grid(extent_str)
         self.clip_raw_grid()
         self.buffer_clipped_grid()
-        # os.remove(self.plot_paths['raw_tpa_plots'])
-        # os.remove(self.plot_paths['clipped_tpa_plots'])
+        return self.plot_paths
 
     def load_shp(self):
         shp_vlayer = QgsVectorLayer(self.shp_path, "shp", "ogr")
@@ -97,6 +96,9 @@ class GridMaker:
         grid_path = integration.get_grid_path(client_id, project_id, stand_id)
         plot_paths = integration.get_plot_paths(client_id, project_id, stand_id)
         return cls(shp_path, grid_path, plot_paths).run()
+
+def FromIDs(client_id, project_id, stand_id):
+    return GridMaker.FromIDs(client_id, project_id, stand_id)
 
 if __name__ == "__main__":
     import argparse
