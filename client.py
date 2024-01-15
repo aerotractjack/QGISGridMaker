@@ -1,4 +1,4 @@
-from QGISGridMaker.gridmaker import FromIDs, log
+from QGISGridMaker.gridmaker import FromIDs
 
 if __name__ == "__main__":
     import argparse
@@ -12,5 +12,5 @@ if __name__ == "__main__":
         msg = f"""
         Starting {args.client}, {args.project}, {stand} 
         """
-        log(msg)
+        print(msg)
         FromIDs(args.client, args.project, stand)
