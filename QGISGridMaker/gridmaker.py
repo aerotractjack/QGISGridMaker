@@ -23,16 +23,11 @@ sdk_logger = AeroLogger(
 from requires_nas import requires_nas_loop
 requires_nas_loop(info_logger=sdk_logger.info, error_logger=sdk_logger.error)
 
-
 QgsApplication.setPrefixPath("/usr/bin/qgis", True)
 qgs = QgsApplication([], False)
 qgs.initQgis()
 Processing.initialize()
 qgs.processingRegistry().addProvider(QgsNativeAlgorithms())
-
-def log(msg):
-    print(msg)
-    sys.stdout.flush()
 
 class GridMaker:
 
