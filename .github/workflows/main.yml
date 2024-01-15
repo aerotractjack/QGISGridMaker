@@ -4,27 +4,40 @@ on:
     branches:
       - main
 
+env:
+  REMOTE_IP: 67.210.192.18
+  REMOTE_DIR: /home/aerotract/software/ValidationPlotGen/QGISGridMaker
+  API_DIR: /home/aerotract/software/ValidationPlotGen/QGISGridService
+  RESTART_SCRIPT: /home/aerotract/software/internal-tools/restart-service.sh
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        targets:
+          - { name: "Sandra", port: 1953, method: "ssh" }
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Set up SSH keys
+      - name: Set up SSH keys for deployment
         run: |
-          mkdir ~/.ssh
-          chmod 700 ~/.ssh
+          mkdir -p ~/.ssh
           echo "${{ secrets.WS006_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           echo "${{ secrets.WS006_PUBLIC_KEY }}" > ~/.ssh/id_rsa.pub
           chmod 600 ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa.pub
-          ssh-keyscan -p 1953 -H 67.210.192.18 >> ~/.ssh/known_hosts
+          ssh-keyscan -p ${{ matrix.targets.port }} -H ${{ env.REMOTE_IP }} >> ~/.ssh/known_hosts
 
-      - name: Deploy to Sandra
+      - name: Deploy updates via SSH to ${{ matrix.targets.name }}
         run: |
-          ssh -o PasswordAuthentication=no -p 1953 aerotract@67.210.192.18 "cd /home/aerotract/software/ValidationPlotGen/QGISGridMaker; git pull; "
-          ssh -o PasswordAuthentication=no -p 1953 aerotract@67.210.192.18 "cd /home/aerotract/software/ValidationPlotGen/QGISGridMaker; python3 -m pip install --user -r requirements.txt"
-          ssh -o PasswordAuthentication=no -p 1953 aerotract@67.210.192.18 "cd /home/aerotract/software/ValidationPlotGen/QGISGridMaker; ./install.sh"
-          ssh -o PasswordAuthentication=no -p 1953 aerotract@67.210.192.18 "cd /home/aerotract/software/ValidationPlotGen/QGISGridService; ../../internal-tools/restart-service.sh QGISGrid.service"
+          ssh -o PasswordAuthentication=no -p ${{ matrix.targets.port }} aerotract@${{ env.REMOTE_IP }} "cd ${{ env.REMOTE_DIR }}; git pull"
+          ssh -o PasswordAuthentication=no -p ${{ matrix.targets.port }} aerotract@${{ env.REMOTE_IP }} "cd ${{ env.REMOTE_DIR }}; python3 -m pip install --user -r requirements.txt"
+          ssh -o PasswordAuthentication=no -p ${{ matrix.targets.port }} aerotract@${{ env.REMOTE_IP }} "cd ${{ env.REMOTE_DIR }}; ./install.sh"
+
+      - name: Restart API on Sandra
+        if: matrix.targets.name == 'Sandra'
+        run: |
+          ssh -o PasswordAuthentication=no -p ${{ matrix.targets.port }} aerotract@${{ env.REMOTE_IP }} "cd ${{ env.API_DIR }}; ${{ env.RESTART_SCRIPT }} QGISGrid.service"
