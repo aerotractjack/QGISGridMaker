@@ -1,1 +1,1 @@
-from .gridmaker import GridMaker, FromIDs, log
+from .gridmaker import GridMaker, FromIDs
