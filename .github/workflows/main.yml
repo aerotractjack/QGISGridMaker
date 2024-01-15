@@ -24,5 +24,7 @@ jobs:
 
       - name: Deploy to Sandra
         run: |
-          ssh -o PasswordAuthentication=no -p 1953 aerotract@67.210.192.18 "cd /home/aerotract/software/ValidationPlotGen/QGISGridMaker; git pull; ./install.sh"
+          ssh -o PasswordAuthentication=no -p 1953 aerotract@67.210.192.18 "cd /home/aerotract/software/ValidationPlotGen/QGISGridMaker; git pull; "
+          ssh -o PasswordAuthentication=no -p 1953 aerotract@67.210.192.18 "cd /home/aerotract/software/ValidationPlotGen/QGISGridMaker; python3 -m pip install --user -r requirements.txt"
+          ssh -o PasswordAuthentication=no -p 1953 aerotract@67.210.192.18 "cd /home/aerotract/software/ValidationPlotGen/QGISGridMaker; ./install.sh"
           ssh -o PasswordAuthentication=no -p 1953 aerotract@67.210.192.18 "cd /home/aerotract/software/ValidationPlotGen/QGISGridService; ../../internal-tools/restart-service.sh QGISGrid.service"
