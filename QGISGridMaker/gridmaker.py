@@ -1,5 +1,6 @@
 import os
 import math
+import sys
 import geopandas as gpd
 from qgis.core import (
     QgsApplication,
@@ -8,11 +9,10 @@ from qgis.core import (
     QgsUnitTypes,
     QgsCoordinateReferenceSystem
 )
-from qgis.analysis import QgsNativeAlgorithms
-import sys
-sys.path.append("/usr/share/qgis/python/plugins")
 import processing
 from processing.core.Processing import Processing
+from qgis.analysis import QgsNativeAlgorithms
+
 from . import integration
 
 from aerologger import AeroLogger
@@ -23,12 +23,25 @@ sdk_logger = AeroLogger(
 from requires_nas import requires_nas_loop
 requires_nas_loop(info_logger=sdk_logger.info, error_logger=sdk_logger.error)
 
-QgsApplication.setPrefixPath("/usr/bin/qgis", True)
-qgs = QgsApplication([], False)
-qgs.initQgis()
-Processing.initialize()
-qgs.processingRegistry().addProvider(QgsNativeAlgorithms())
+# QGIS Context Manager
+class QGISContext:
 
+    def __init__(self):
+        self.qgis = None
+
+    def __enter__(self):
+        QgsApplication.setPrefixPath("/usr/bin/qgis", True)
+        qgs = QgsApplication([], False)
+        qgs.initQgis()
+        Processing.initialize()
+        qgs.processingRegistry().addProvider(QgsNativeAlgorithms())
+        self.qgis = qgs
+        return self  
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.qgis.exitQgis()
+
+# QGIS Processing Steps
 class GridMaker:
 
     def __init__(self, shp_path, grid_path, plot_paths):
@@ -114,7 +127,6 @@ class GridMaker:
         self.create_raw_grid(extent_str)
         self.clip_raw_grid()
         self.buffer_clipped_grid()
-        qgs.exitQgis()
         os.remove(self.plot_paths['raw_tpa_plots'])
         os.remove(self.plot_paths['clipped_tpa_plots'])
         self.post_process_plots()
@@ -130,15 +142,24 @@ class GridMaker:
         except Exception as e:
             sdk_logger.error("Error fetching paths:")
             sdk_logger.error(str(e))
-            sys.exit(1)
         try:
             plot_path = cls(shp_path, grid_path, plot_paths).run()
             sdk_logger.info(f"Saving paths to {str(plot_path)}")
             return plot_path
         except Exception as e:
             sdk_logger.error(str(e))
-            sys.exit(1)
 
-def FromIDs(client_id, project_id, stand_id):
-    return GridMaker.FromIDs(client_id, project_id, stand_id)
-
+def GridMakerFactory(client_id, project_id, stand_id, msg=False):
+    if not isinstance(stand_id, list):
+        stand_id = [stand_id]
+    out = []
+    with QGISContext() as qgc:
+        for stand in stand_id:
+            if msg:
+                print(f"Starting {client_id}, {project_id}, {stand}")
+            try:
+                plot_path = GridMaker.FromIDs(client_id, project_id, stand)
+                out.append(plot_path)
+            except Exception as e:
+                sdk_logger.error(e)
+    return out

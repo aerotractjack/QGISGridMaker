@@ -1,4 +1,4 @@
-from QGISGridMaker.gridmaker import FromIDs
+from QGISGridMaker import GridMakerFactory
 
 if __name__ == "__main__":
     import argparse
@@ -8,9 +8,4 @@ if __name__ == "__main__":
     parser.add_argument("--stand", "-s", required=True, help="Stand 3-Digit ID", nargs="+")
     args = parser.parse_args()
 
-    for stand in args.stand:
-        msg = f"""
-        Starting {args.client}, {args.project}, {stand} 
-        """
-        print(msg)
-        FromIDs(args.client, args.project, stand)
+    GridMakerFactory(args.client, args.project, args.stand, msg=True)

@@ -1,1 +1,1 @@
-from .gridmaker import GridMaker, FromIDs
+from .gridmaker import GridMaker, GridMakerFactory, QGISContext
