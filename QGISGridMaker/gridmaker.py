@@ -1,6 +1,7 @@
 import os
 import math
 import sys
+import traceback
 import geopandas as gpd
 from qgis.core import (
     QgsApplication,
@@ -51,6 +52,7 @@ class GridMaker:
         self.project = QgsProject.instance()
         self.project.setDistanceUnits(QgsUnitTypes.DistanceFeet)
         self.project.setAreaUnits(QgsUnitTypes.AreaAcres)
+        self.shp_crs = None
 
     def load_shp(self):
         shp_vlayer = QgsVectorLayer(self.shp_path, "shp", "ogr")
@@ -63,6 +65,7 @@ class GridMaker:
         extent = shp_vlayer.extent()
         shp_crs_str = f"[{shp_vlayer.crs().authid()}]"
         extent_str = f"{extent.xMinimum()},{extent.xMaximum()},{extent.yMinimum()},{extent.yMaximum()} {shp_crs_str}"
+        self.shp_crs = shp_vlayer.crs()
         return extent_str
 
     def create_raw_grid(self, extent_str):
@@ -75,7 +78,7 @@ class GridMaker:
             'VSPACING': grid_ft*.308,  
             'HOVERLAY': 0,
             'VOVERLAY': 0,
-            'OUTPUT': self.plot_paths['raw_tpa_plots']
+            'OUTPUT': self.plot_paths['raw_tpa_plots'],
         }
         processing.run("qgis:creategrid", params)
 
@@ -83,7 +86,7 @@ class GridMaker:
         params = {
             'INPUT': self.plot_paths['raw_tpa_plots'],  
             'OVERLAY': self.shp_path,  
-            'OUTPUT': self.plot_paths['clipped_tpa_plots']  
+            'OUTPUT': self.plot_paths['clipped_tpa_plots'] ,
         }
         processing.run("qgis:clip", params)
 
@@ -96,29 +99,31 @@ class GridMaker:
             'JOIN_STYLE': 0,  
             'MITER_LIMIT': 2,  
             'DISSOLVE': False,  
-            'OUTPUT': self.plot_paths['buffered_tpa_plots'] 
+            'OUTPUT': self.plot_paths['buffered_tpa_plots'],
         }
         processing.run("qgis:buffer", params)
 
     def calculate_coverage(self, area_acre):
         min_acre = 10
         max_acre = 225
-        min_cov = 0.025
-        max_cov = 0.025 / 15
+        min_cov = 15
+        max_cov = 30
         cov = min_cov + (max_cov - min_cov) * ((area_acre - min_acre) / (max_acre - min_acre))
         return cov
 
     def post_process_plots(self):
         plots = gpd.read_file(self.plot_paths['buffered_tpa_plots'])
         single_plot_area = math.pi*(13.7**2)
-        total_plot_area = single_plot_area * plots.shape[0]
-        shp = gpd.read_file(self.shp_path).to_crs("EPSG:32610")
+        shp = gpd.read_file(self.shp_path).to_crs("EPSG:32610") 
         area_sq_meter = shp.geometry.area.sum()
         area_acre = area_sq_meter * 0.000247105
         area_sqft = area_sq_meter * 10.7639
-        cov = self.calculate_coverage(area_acre)
-        cov_area = area_sqft * cov
-        n_plots = int(cov_area // single_plot_area)
+        # cov = self.calculate_coverage(area_acre)
+        # cov_area = area_sqft * cov
+        # n_plots = int(cov_area // single_plot_area)
+        n_plots = int(self.calculate_coverage(area_acre))
+        print(plots)
+        print(n_plots)
         plots = plots.sample(n=n_plots)
         plots.to_file(self.plot_paths['buffered_tpa_plots'], crs=plots.crs, driver="GeoJSON")
 
@@ -127,9 +132,9 @@ class GridMaker:
         self.create_raw_grid(extent_str)
         self.clip_raw_grid()
         self.buffer_clipped_grid()
+        self.post_process_plots()
         os.remove(self.plot_paths['raw_tpa_plots'])
         os.remove(self.plot_paths['clipped_tpa_plots'])
-        self.post_process_plots()
         return self.plot_paths['buffered_tpa_plots']
 
     @classmethod
@@ -146,8 +151,8 @@ class GridMaker:
             plot_path = cls(shp_path, grid_path, plot_paths).run()
             sdk_logger.info(f"Saving paths to {str(plot_path)}")
             return plot_path
-        except Exception as e:
-            sdk_logger.error(str(e))
+        except Exception:
+            sdk_logger.error(str(traceback.format_exc()))
 
 def GridMakerFactory(client_id, project_id, stand_id, msg=False):
     if not isinstance(stand_id, list):
@@ -161,5 +166,5 @@ def GridMakerFactory(client_id, project_id, stand_id, msg=False):
                 plot_path = GridMaker.FromIDs(client_id, project_id, stand)
                 out.append(plot_path)
             except Exception as e:
-                sdk_logger.error(e)
+                sdk_logger.error(str(e))
     return out

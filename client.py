@@ -8,4 +8,5 @@ if __name__ == "__main__":
     parser.add_argument("--stand", "-s", required=True, help="Stand 3-Digit ID", nargs="+")
     args = parser.parse_args()
 
-    GridMakerFactory(args.client, args.project, args.stand, msg=True)
+    out = GridMakerFactory(args.client, args.project, args.stand, msg=True)
+    print(out)
