@@ -131,8 +131,8 @@ class GridMaker:
         self.clip_raw_grid()
         self.buffer_clipped_grid()
         self.post_process_plots()
-        os.remove(self.plot_paths['raw_tpa_plots'])
-        os.remove(self.plot_paths['clipped_tpa_plots'])
+        # os.remove(self.plot_paths['raw_tpa_plots'])
+        # os.remove(self.plot_paths['clipped_tpa_plots'])
         return self.plot_paths['buffered_tpa_plots']
 
     @classmethod
