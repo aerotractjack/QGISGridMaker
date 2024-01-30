@@ -122,8 +122,6 @@ class GridMaker:
         # cov_area = area_sqft * cov
         # n_plots = int(cov_area // single_plot_area)
         n_plots = int(self.calculate_coverage(area_acre))
-        print(plots)
-        print(n_plots)
         plots = plots.sample(n=n_plots)
         plots.to_file(self.plot_paths['buffered_tpa_plots'], crs=plots.crs, driver="GeoJSON")
 
@@ -154,11 +152,11 @@ class GridMaker:
         except Exception:
             sdk_logger.error(str(traceback.format_exc()))
 
-def GridMakerFactory(client_id, project_id, stand_id, msg=False):
+def GridMakerFactory(client_id, project_id, stand_id, msg=False, context=True):
     if not isinstance(stand_id, list):
         stand_id = [stand_id]
-    out = []
-    with QGISContext() as qgc:
+    def factory(stand_id):
+        out = []
         for stand in stand_id:
             if msg:
                 print(f"Starting {client_id}, {project_id}, {stand}")
@@ -167,4 +165,8 @@ def GridMakerFactory(client_id, project_id, stand_id, msg=False):
                 out.append(plot_path)
             except Exception as e:
                 sdk_logger.error(str(e))
-    return out
+        return out
+    if not context:
+        return factory(stand_id)
+    with QGISContext() as qgc:
+        return factory(stand_id)
