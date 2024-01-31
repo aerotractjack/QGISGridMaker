@@ -137,7 +137,7 @@ class GridMaker:
 
     @classmethod
     def FromIDs(cls, client_id, project_id, stand_id):
-        sdk_logger.info(f"Generating plots for {client_id}, {project_id}, {stand_id}")
+        sdk_logger.info(f"Generating val plots for {client_id}, {project_id}, {stand_id}")
         try:
             shp_path = integration.get_shp_path(client_id, project_id, stand_id)
             grid_path = integration.get_grid_path(client_id, project_id, stand_id)
